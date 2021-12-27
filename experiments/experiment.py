@@ -446,7 +446,7 @@ def main():
     # Set configurations and override some
     experiment.configs(configs, {
         'device.cuda_device': 0,
-        'image_size': 64,
+        'image_size': 128,
         'log_generated_interval': 200
     })
 
