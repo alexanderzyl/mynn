@@ -41,8 +41,8 @@ from labml import tracker, lab, monit, experiment
 from labml.configs import BaseConfigs
 from labml_helpers.device import DeviceConfigs
 from labml_helpers.train_valid import ModeState, hook_model_outputs
-from stylegan2 import Discriminator, Generator, MappingNetwork, GradientPenalty, PathLengthPenalty
-from stylegan2 import DiscriminatorLoss, GeneratorLoss
+from stylegan2_annotated import Discriminator, Generator, MappingNetwork, GradientPenalty, PathLengthPenalty
+from stylegan2_annotated import DiscriminatorLoss, GeneratorLoss
 from utils import cycle_dataloader
 
 
