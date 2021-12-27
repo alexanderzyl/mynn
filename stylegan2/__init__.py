@@ -20,7 +20,7 @@ All three papers are from the same authors from [NVIDIA AI](https://twitter.com/
 Only single GPU training is supported to keep the implementation simple.
 We managed to shrink it to keep it at less than 500 lines of code, including the training loop.*
 
-**🏃 Here's the training code: [`experiment.py`](experiment.html).**
+**🏃 Here's the training code: [`annotated.py`](experiment.html).**
 
 ![Generated Images](generated_64.png)
 
