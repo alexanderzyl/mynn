@@ -9,3 +9,11 @@ einops>=0.3.0
 gym[atari]
 opencv-python
 Pillow>=6.2.1
+aim
+einops
+contrastive_learner>=0.1.0
+fire
+kornia>=0.5.4
+retry
+tqdm
+vector-quantize-pytorch==0.1.0
