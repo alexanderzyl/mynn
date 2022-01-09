@@ -1,6 +1,6 @@
 import os
-from datetime import datetime
 
+from evaluate_pytorch import evaluate
 from models_pytorch import Trainer
 
 os.environ["CUDA_VISIBLE_DEVICES"] = ""
@@ -8,12 +8,6 @@ os.environ["CUDA_VISIBLE_DEVICES"] = ""
 
 def cast_list(el):
     return el if isinstance(el, list) else [el]
-
-
-def timestamped_filename(prefix='generated-'):
-    now = datetime.now()
-    timestamp = now.strftime("%m-%d-%Y_%H-%M-%S")
-    return f'{prefix}{timestamp}'
 
 
 def init_model(
@@ -85,13 +79,6 @@ def init_model(
     model = Trainer(**model_args)
     model.load(load_from)
     return model
-
-
-def evaluate(model, results_dir='./results', name='faces', num_generate=1, num_image_tiles=8):
-    samples_name = timestamped_filename()
-    for num in range(num_generate):
-        model.evaluate(f'{samples_name}-{num}', num_image_tiles)
-    print(f'sample images generated at {results_dir}/{name}/{samples_name}')
 
 
 def main():
