@@ -16,7 +16,7 @@ def timestamped_filename(prefix='generated-'):
     return f'{prefix}{timestamp}'
 
 
-def generate_images(
+def init_model(
         results_dir='./results',
         models_dir='./models',
         name='faces',
@@ -30,8 +30,6 @@ def generate_images(
         num_workers=None,
         save_every=1000,
         evaluate_every=1000,
-        num_generate=1,
-        num_image_tiles=8,
         trunc_psi=0.75,
         mixed_prob=0.9,
         no_pl_reg=False,
@@ -64,7 +62,6 @@ def generate_images(
         num_workers=num_workers,
         save_every=save_every,
         evaluate_every=evaluate_every,
-        num_image_tiles=num_image_tiles,
         trunc_psi=trunc_psi,
         no_pl_reg=no_pl_reg,
         cl_reg=cl_reg,
@@ -87,6 +84,10 @@ def generate_images(
 
     model = Trainer(**model_args)
     model.load(load_from)
+    return model
+
+
+def evaluate(model, results_dir='./results', name='faces', num_generate=1, num_image_tiles=8):
     samples_name = timestamped_filename()
     for num in range(num_generate):
         model.evaluate(f'{samples_name}-{num}', num_image_tiles)
@@ -94,7 +95,8 @@ def generate_images(
 
 
 def main():
-    generate_images()
+    model = init_model()
+    evaluate(model)
 
 
 if __name__ == '__main__':
