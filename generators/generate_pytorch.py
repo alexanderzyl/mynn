@@ -1,8 +1,6 @@
 import os
 from datetime import datetime
 
-import torch
-
 from models_pytorch import Trainer
 
 os.environ["CUDA_VISIBLE_DEVICES"] = ""
@@ -18,19 +16,15 @@ def timestamped_filename(prefix='generated-'):
     return f'{prefix}{timestamp}'
 
 
-def _generate_images(
+def generate_images(
         results_dir='./results',
         models_dir='./models',
         name='faces',
         load_from=-1,
         image_size=128,
         network_capacity=16,
-        fmap_max=512,
         transparent=False,
         batch_size=16,
-        gradient_accumulate_every=6,
-        learning_rate=2e-4,
-        lr_mlp=0.1,
         ttur_mult=1.5,
         rel_disc_loss=False,
         num_workers=None,
@@ -40,7 +34,6 @@ def _generate_images(
         num_image_tiles=8,
         trunc_psi=0.75,
         mixed_prob=0.9,
-        fp16=False,
         no_pl_reg=False,
         cl_reg=False,
         fq_layers=[],
@@ -56,21 +49,16 @@ def _generate_images(
         dataset_aug_prob=0.,
         calculate_fid_every=None,
         calculate_fid_num_images=12800,
-        clear_fid_cache=False,
-        log=False
+        clear_fid_cache=False
 ):
     model_args = dict(
         name=name,
         results_dir=results_dir,
         models_dir=models_dir,
         batch_size=batch_size,
-        gradient_accumulate_every=gradient_accumulate_every,
         image_size=image_size,
         network_capacity=network_capacity,
-        fmap_max=fmap_max,
         transparent=transparent,
-        lr=learning_rate,
-        lr_mlp=lr_mlp,
         ttur_mult=ttur_mult,
         rel_disc_loss=rel_disc_loss,
         num_workers=num_workers,
@@ -78,7 +66,6 @@ def _generate_images(
         evaluate_every=evaluate_every,
         num_image_tiles=num_image_tiles,
         trunc_psi=trunc_psi,
-        fp16=fp16,
         no_pl_reg=no_pl_reg,
         cl_reg=cl_reg,
         fq_layers=fq_layers,
@@ -95,8 +82,7 @@ def _generate_images(
         calculate_fid_every=calculate_fid_every,
         calculate_fid_num_images=calculate_fid_num_images,
         clear_fid_cache=clear_fid_cache,
-        mixed_prob=mixed_prob,
-        log=log
+        mixed_prob=mixed_prob
     )
 
     model = Trainer(**model_args)
@@ -108,7 +94,7 @@ def _generate_images(
 
 
 def main():
-    _generate_images()
+    generate_images()
 
 
 if __name__ == '__main__':
