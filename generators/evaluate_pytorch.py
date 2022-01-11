@@ -12,18 +12,6 @@ def timestamped_filename(prefix='generated-'):
     return f'{prefix}{timestamp}'
 
 
-def noise(n, latent_dim):
-    return torch.randn(n, latent_dim).cpu()
-
-
-def noise_list(n, layers, latent_dim):
-    return [(noise(n, latent_dim), layers)]
-
-
-def image_noise(n, im_size):
-    return torch.FloatTensor(n, im_size, im_size, 1).uniform_(0., 1.).cpu()
-
-
 def styles_def_to_tensor(styles_def):
     return torch.cat([t[:, None, :].expand(-1, n, -1) for t, n in styles_def], dim=1)
 
@@ -37,7 +25,8 @@ def evaluate_in_chunks(max_batch_size, model, *args):
 
 
 class ImageGenerator:
-    def __init__(self, model, sample_name='sample', num_image_tiles=8, trunc_psi=0.75, save=True):
+    def __init__(self, model, sample_name='sample', num_image_tiles=8, trunc_psi=0.75, save=True, device='cpu'):
+        self.device = device
         self.trunc_psi = trunc_psi
         self.save = save
         self.model = model
@@ -94,10 +83,10 @@ class ImageGenerator:
             repeat_idx[dim] = n_tile
             a = a.repeat(*repeat_idx)
             order_index = torch.LongTensor(
-                np.concatenate([init_dim * np.arange(n_tile) + i for i in range(init_dim)])).cpu()
+                np.concatenate([init_dim * np.arange(n_tile) + i for i in range(init_dim)])).to(self.device)
             return torch.index_select(a, dim, order_index)
 
-        nn = noise(self.num_rows, self.latent_dim)
+        nn = torch.randn(self.num_rows, self.latent_dim).to(self.device)
         tmp1 = tile(nn, 0, self.num_rows)
         tmp2 = nn.repeat(self.num_rows, 1)
         tt = int(self.num_layers / 2)
@@ -124,14 +113,17 @@ class ImageGenerator:
         return w_styles
 
     def gen_noise(self):
-        return image_noise(self.num_rows ** 2, self.image_size)
+        return self.__image_noise(self.num_rows ** 2, self.image_size)
+
+    def __image_noise(self, n, im_size):
+        return torch.FloatTensor(n, im_size, im_size, 1).uniform_(0., 1.).to(self.device)
 
     def gen_latents(self):
-        return noise_list(self.num_rows ** 2, self.num_layers, self.latent_dim)
+        return [(torch.randn(self.num_rows ** 2, self.latent_dim).to(self.device), self.num_layers)]
 
 
-def evaluate(model, num_image_tiles=8):
+def evaluate(model, device, num_image_tiles=8):
     samples_name = timestamped_filename()
-    image_generator = ImageGenerator(model, f'{samples_name}-0', num_image_tiles)
+    image_generator = ImageGenerator(model, f'{samples_name}-0', num_image_tiles, device=device)
     image_generator.evaluate_all()
     print(f'sample images generated: {samples_name}')

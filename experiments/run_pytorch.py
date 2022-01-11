@@ -32,23 +32,7 @@ def set_seed(seed):
     random.seed(seed)
 
 
-def run_training(rank, world_size, model_args, data, load_from, new, num_train_steps, name, seed):
-    is_main = rank == 0
-    is_ddp = world_size > 1
-
-    if is_ddp:
-        set_seed(seed)
-        os.environ['MASTER_ADDR'] = 'localhost'
-        os.environ['MASTER_PORT'] = '12355'
-        dist.init_process_group('nccl', rank=rank, world_size=world_size)
-
-        print(f"{rank + 1}/{world_size} process initialized.")
-
-    model_args.update(
-        is_ddp=is_ddp,
-        rank=rank,
-        world_size=world_size
-    )
+def run_training(model_args, data, load_from, new, num_train_steps, name):
 
     model = Trainer(**model_args)
 
@@ -64,23 +48,20 @@ def run_training(rank, world_size, model_args, data, load_from, new, num_train_s
         retry_call(model.train, tries=3, exceptions=NanException)
         progress_bar.n = model.steps
         progress_bar.refresh()
-        if is_main and model.steps % 50 == 0:
+        if model.steps % 50 == 0:
             model.print_log()
 
     model.save(model.checkpoint_num)
-
-    if is_ddp:
-        dist.destroy_process_group()
 
 
 def train_from_folder(
         data='./data/stylegan2',
         results_dir='./results',
         models_dir='./models',
-        name='faces',
+        name='faces_exp',
         new=False,
         load_from=-1,
-        image_size=128,
+        image_size=32,
         network_capacity=16,
         fmap_max=512,
         transparent=False,
@@ -121,7 +102,8 @@ def train_from_folder(
         calculate_fid_num_images=12800,
         clear_fid_cache=False,
         seed=42,
-        log=False
+        log=False,
+        device='cpu'
 ):
     model_args = dict(
         name=name,
@@ -160,7 +142,8 @@ def train_from_folder(
         calculate_fid_num_images=calculate_fid_num_images,
         clear_fid_cache=clear_fid_cache,
         mixed_prob=mixed_prob,
-        log=log
+        log=log,
+        device=device
     )
 
     if generate:
@@ -181,16 +164,7 @@ def train_from_folder(
         print(f'interpolation generated at {results_dir}/{name}/{samples_name}')
         return
 
-    world_size = torch.cuda.device_count()
-
-    if world_size == 1 or not multi_gpus:
-        run_training(0, 1, model_args, data, load_from, new, num_train_steps, name, seed)
-        return
-
-    mp.spawn(run_training,
-             args=(world_size, model_args, data, load_from, new, num_train_steps, name, seed),
-             nprocs=world_size,
-             join=True)
+    run_training(model_args, data, load_from, new, num_train_steps, name)
 
 
 def main():

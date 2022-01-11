@@ -1,1 +1,3 @@
-from stylegan2_pytorch.stylegan2_pytorch import Trainer, StyleGAN2, NanException, ModelLoader
+from stylegan2_pytorch.utils import NanException
+from stylegan2_pytorch.stylegan2 import StyleGAN2
+from stylegan2_pytorch.trainer import Trainer, ModelLoader

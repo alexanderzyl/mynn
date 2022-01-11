@@ -1,9 +1,7 @@
 import os
 
 from evaluate_pytorch import evaluate
-from models_pytorch import Trainer
-
-os.environ["CUDA_VISIBLE_DEVICES"] = ""
+from generators.models_legacy import Trainer
 
 
 def cast_list(el):
@@ -41,7 +39,8 @@ def init_model(
         dataset_aug_prob=0.,
         calculate_fid_every=None,
         calculate_fid_num_images=12800,
-        clear_fid_cache=False
+        clear_fid_cache=False,
+        device='cpu'
 ):
     model_args = dict(
         name=name,
@@ -73,7 +72,8 @@ def init_model(
         calculate_fid_every=calculate_fid_every,
         calculate_fid_num_images=calculate_fid_num_images,
         clear_fid_cache=clear_fid_cache,
-        mixed_prob=mixed_prob
+        mixed_prob=mixed_prob,
+        device=device
     )
 
     model = Trainer(**model_args)
@@ -82,8 +82,9 @@ def init_model(
 
 
 def main():
-    model = init_model()
-    evaluate(model)
+    device = 'cpu'
+    model = init_model(device=device)
+    evaluate(model, device=device)
 
 
 if __name__ == '__main__':
