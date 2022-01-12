@@ -758,6 +758,13 @@ class StyleGAN2(nn.Module):
     def forward(self, x):
         return x
 
+class generatedImage():
+    def __init__(self):
+        self.wStyles = None
+        self.styleKfList = {}
+        self.noise = None
+        self.modName = None
+
 class Trainer():
     def __init__(
         self,
@@ -889,6 +896,8 @@ class Trainer():
         self.world_size = world_size
 
         self.logger = aim.Session(experiment=name) if log else None
+
+        self.prevGenImage = generatedImage()
 
     @property
     def image_extension(self):
@@ -1161,6 +1170,74 @@ class Trainer():
         self.av = None
 
     @torch.no_grad()
+
+    def getStyleKf(self, styleNum):
+        if styleNum in self.prevGenImage.styleKfList.keys():
+            return int( 100 * self.prevGenImage.styleKfList[styleNum] )
+        return 0
+
+    def modImage(self, styleNum, value):
+        # Get layers.
+
+        if self.prevGenImage is None:
+            return ''
+
+        if styleNum < 512:
+            val = float(value) * 0.01
+            self.prevGenImage.styleKfList[styleNum] = val
+
+        ext = self.image_extension
+        num_layers = self.GAN.G.num_layers
+        layers = list(range(num_layers))
+
+        # Factorize semantics from weight.
+
+        weights = []
+
+        for block in self.GAN.G.blocks:
+            weight = block.to_style1.weight.T
+            weights.append(weight.cpu().detach().numpy())
+        weight = np.concatenate(weights, axis=1).astype(np.float32)
+        weight = weight / np.linalg.norm(weight, axis=0, keepdims=True)
+        eigen_values, eigen_vectors = np.linalg.eig(weight.dot(weight.T))
+
+        new_style = self.prevGenImage.wStyles
+        for num in self.prevGenImage.styleKfList:
+            val = self.prevGenImage.styleKfList[num]
+            style_change = val * eigen_values[num] * torch.from_numpy(eigen_vectors[num]).expand(6, 512).expand(
+            1, 6, 512).cuda()
+            new_style = new_style + style_change
+
+        generated_images = evaluate_in_chunks(self.batch_size, self.GAN.G, new_style, self.prevGenImage.noise)
+        generated_image = generated_images.clamp_(0., 1.)
+
+        torchvision.utils.save_image(generated_image, self.prevGenImage.modName, nrow=1)
+
+        return self.prevGenImage.modName
+
+    def genOneImage(self, nameNum):
+        self.GAN.eval()
+        ext = self.image_extension
+        latent_dim = self.GAN.G.latent_dim
+        image_size = self.GAN.G.image_size
+        num_layers = self.GAN.G.num_layers
+
+        # latents and noise
+        latents = noise_list(1, num_layers, latent_dim, device=self.rank)
+        self.prevGenImage.noise = image_noise(1, image_size, device=self.rank)
+        w = map(lambda t: (self.GAN.S(t[0]), t[1]), latents)
+        w_truncated = self.truncate_style_defs(w, trunc_psi=self.trunc_psi)
+        self.prevGenImage.wStyles = styles_def_to_tensor(w_truncated)
+
+        generated_images = evaluate_in_chunks(self.batch_size, self.GAN.G, self.prevGenImage.wStyles, self.prevGenImage.noise)
+        generated_image = generated_images.clamp_(0., 1.)
+        origName = str(self.results_dir / self.name / f'{str(nameNum)}.{ext}')
+        torchvision.utils.save_image(generated_image, origName, nrow=1)
+
+        self.prevGenImage.modName = str(self.results_dir / self.name / f'{str(nameNum)}_mod.{ext}')
+
+        return origName
+
     def evaluate(self, num = 0, trunc = 1.0):
         self.GAN.eval()
         ext = self.image_extension
