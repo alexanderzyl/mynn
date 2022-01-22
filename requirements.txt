@@ -17,3 +17,4 @@ kornia>=0.5.4
 retry
 tqdm
 vector-quantize-pytorch==0.1.0
+tensorboard

@@ -1,6 +1,6 @@
 from abc import abstractmethod
 import torchvision.transforms as transforms
-from datasets import augmentations
+from pixel2style.datasets import augmentations
 
 
 class TransformsConfig(object):

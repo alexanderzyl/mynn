@@ -1,6 +1,6 @@
 from torch.utils.data import Dataset
 from PIL import Image
-from utils import data_utils
+from pixel2style.utils import data_utils
 
 
 class ImagesDataset(Dataset):
