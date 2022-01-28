@@ -47,6 +47,8 @@ class GUIWindow:
         self.imageModLabel.setPixmap(QPixmap.fromImage(image))
 
     def genetare(self):
+        emptyPixmap = QPixmap()
+        self.imageModLabel.setPixmap(emptyPixmap)
         samples_name = timestamped_filename()
         self.leftBtn.setEnabled(True)
         self.rightBtn.setEnabled(True)
@@ -139,8 +141,7 @@ class SemanticClass:
     def __init__(self, parent, index, func):
         self.label = QLabel(parent=parent)
         self.slider = QSlider(Qt.Horizontal, parent=parent)
-        self.slider.setRange( -50, 50 )
-        self.slider.sliderReleased.connect(self.valRealesed)
+        self.slider.setRange( -150, 150 )
         self.slider.valueChanged.connect(self.valChanged)
         self.setIndex(index)
         self.modFunc = func
@@ -151,15 +152,12 @@ class SemanticClass:
 
     def valChanged(self, value):
         self.label.setText(str(f's{self.ind} = {value}'))
-
-    def valRealesed(self):
-        self.modFunc(self.ind, self.slider.value())
-        print('semantic ', self.ind, ' changed = ', self.slider.value())
+        self.modFunc(self.ind, value)
 
 def loadModel(
             results_dir='./generated',
             models_dir='./models',
-            name='faces',
+            name='faces_bkg128',
             load_from=150,
             image_size=128,
             network_capacity=16,

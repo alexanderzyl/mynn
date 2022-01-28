@@ -1200,11 +1200,12 @@ class Trainer():
         weight = np.concatenate(weights, axis=1).astype(np.float32)
         weight = weight / np.linalg.norm(weight, axis=0, keepdims=True)
         eigen_values, eigen_vectors = np.linalg.eig(weight.dot(weight.T))
+        scales = np.sqrt(eigen_values)
 
         new_style = self.prevGenImage.wStyles
         for num in self.prevGenImage.styleKfList:
             val = self.prevGenImage.styleKfList[num]
-            style_change = val * eigen_values[num] * torch.from_numpy(eigen_vectors[num]).expand(6, 512).expand(
+            style_change = val * scales[num] * torch.from_numpy(eigen_vectors[num]).expand(6, 512).expand(
             1, 6, 512).cuda()
             new_style = new_style + style_change
 
@@ -1216,6 +1217,9 @@ class Trainer():
         return self.prevGenImage.modName
 
     def genOneImage(self, nameNum):
+
+        self.prevGenImage.styleKfList = {}
+
         self.GAN.eval()
         ext = self.image_extension
         latent_dim = self.GAN.G.latent_dim

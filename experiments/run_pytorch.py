@@ -74,12 +74,12 @@ def run_training(rank, world_size, model_args, data, load_from, new, num_train_s
 
 
 def train_from_folder(
-        data='./data/stylegan2',
+        data='./data/celeba_wBkg',
         results_dir='./results',
         models_dir='./models',
-        name='faces',
+        name='faces_bkg128',
         new=False,
-        load_from=138,
+        load_from=86,
         image_size=128,
         network_capacity=16,
         fmap_max=512,
